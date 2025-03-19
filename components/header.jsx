@@ -1,3 +1,5 @@
+"use client";
+
 import React from "react";
 import { Button } from "./ui/button";
 import {
@@ -7,6 +9,8 @@ import {
   GraduationCap,
   ChevronDown,
   StarsIcon,
+  Sun,
+  Moon,
 } from "lucide-react";
 import Link from "next/link";
 import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/nextjs";
@@ -17,10 +21,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import Image from "next/image";
-import { checkUser } from "@/lib/checkUser";
+import { useTheme } from "next-themes";
 
-export default async function Header() {
-  await checkUser();
+export default function Header() {
+  const { theme, setTheme } = useTheme();
 
   return (
     <header className="fixed top-0 w-full border-b bg-background/80 backdrop-blur-md z-50 supports-[backdrop-filter]:bg-background/60">
@@ -85,6 +89,15 @@ export default async function Header() {
               </DropdownMenuContent>
             </DropdownMenu>
           </SignedIn>
+
+          {/* Theme Toggle */}
+          <Button
+            variant="outline"
+            className="w-10 h-10 p-0 rounded-full"
+            onClick={() => setTheme(theme === "dark" ? "light" : "dark")}
+          >
+            {theme === "dark" ? <Sun className="h-5 w-5" /> : <Moon className="h-5 w-5" />}
+          </Button>
 
           <SignedOut>
             <SignInButton>
