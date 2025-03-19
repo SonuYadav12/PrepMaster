@@ -48,7 +48,7 @@ const HeroSection = () => {
           </Link>
           <Link href="">
             <Button size="lg" variant="outline" className="px-8">
-              Mock Interview
+              AI Interview
             </Button>
           </Link>
         </div>
