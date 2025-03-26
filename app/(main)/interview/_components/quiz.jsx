@@ -16,11 +16,23 @@ import { generateQuiz, saveQuizResult } from "@/actions/interview";
 import QuizResult from "./quiz-result";
 import useFetch from "@/hooks/use-fetch";
 import { BarLoader } from "react-spinners";
+import { MultiSelect } from "react-multi-select-component";
+
+const predefinedTopics = [
+  { label: "Data Structures", value: "Data Structures" },
+  { label: "Algorithms", value: "Algorithms" },
+  { label: "Databases", value: "Databases" },
+  { label: "System Design", value: "System Design" },
+  { label: "Networking", value: "Networking" },
+];
 
 export default function Quiz() {
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [answers, setAnswers] = useState([]);
-  const [showExplanation, setShowExplanation] = useState(false);
+  const [weakTopics, setWeakTopics] = useState([]);
+  const [selectedWeakTopics, setSelectedWeakTopics] = useState([]);
+  const [customTopics, setCustomTopics] = useState("");
+  const [selectedTopics, setSelectedTopics] = useState([]);
 
   const {
     loading: generatingQuiz,
@@ -50,26 +62,38 @@ export default function Quiz() {
   const handleNext = () => {
     if (currentQuestion < quizData.length - 1) {
       setCurrentQuestion(currentQuestion + 1);
-      setShowExplanation(false);
     } else {
       finishQuiz();
     }
   };
 
-  const calculateScore = () => {
+  const calculateScoreAndWeakTopics = () => {
     let correct = 0;
+    let weakTopicsSet = new Set();
+
     answers.forEach((answer, index) => {
       if (answer === quizData[index].correctAnswer) {
         correct++;
+      } else {
+        weakTopicsSet.add(quizData[index].topic);
       }
     });
-    return (correct / quizData.length) * 100;
+
+    const weakTopicsArray = [...weakTopicsSet];
+    setWeakTopics(weakTopicsArray); // Dynamically update weak topics
+
+    return {
+      score: (correct / quizData.length) * 100,
+      weakTopics: weakTopicsArray,
+    };
   };
 
   const finishQuiz = async () => {
-    const score = calculateScore();
+    const { score, weakTopics } = calculateScoreAndWeakTopics();
+
     try {
       await saveQuizResultFn(quizData, answers, score);
+      setWeakTopics(weakTopics); // Update weak topics for next quiz
       toast.success("Quiz completed!");
     } catch (error) {
       toast.error(error.message || "Failed to save quiz results");
@@ -79,8 +103,26 @@ export default function Quiz() {
   const startNewQuiz = () => {
     setCurrentQuestion(0);
     setAnswers([]);
-    setShowExplanation(false);
-    generateQuizFn();
+
+    // Get selected topics + weak topics + custom topics
+    const selectedValues = selectedTopics.map(topic => topic.value);
+    const weakValues = selectedWeakTopics.map(topic => topic.value);
+    const customValues = customTopics
+      .split(",")
+      .map(topic => topic.trim())
+      .filter(Boolean);
+
+    // Combine topics
+    const allTopics = [...selectedValues, ...weakValues, ...customValues];
+
+    console.log("Starting new quiz with topics:", allTopics); // Debugging log
+
+    if (allTopics.length === 0) {
+      toast.error("Please select at least one topic before starting the quiz.");
+      return;
+    }
+
+    generateQuizFn(allTopics);
     setResultData(null);
   };
 
@@ -88,11 +130,34 @@ export default function Quiz() {
     return <BarLoader className="mt-4" width={"100%"} color="gray" />;
   }
 
-  // Show results if quiz is completed
   if (resultData) {
     return (
       <div className="mx-2">
         <QuizResult result={resultData} onStartNew={startNewQuiz} />
+
+        {weakTopics.length > 0 && (
+          <Card className="mt-4">
+            <CardHeader>
+              <CardTitle>Practice Weak Topics</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-muted-foreground">
+                Select weak topics from your last quiz to practice.
+              </p>
+              <MultiSelect
+                options={weakTopics.map(topic => ({ label: topic, value: topic }))}
+                value={selectedWeakTopics}
+                onChange={setSelectedWeakTopics}
+                labelledBy="Select Weak Topics"
+              />
+            </CardContent>
+            <CardFooter>
+              <Button onClick={startNewQuiz} className="w-full">
+                Practice Selected Topics
+              </Button>
+            </CardFooter>
+          </Card>
+        )}
       </div>
     );
   }
@@ -101,16 +166,29 @@ export default function Quiz() {
     return (
       <Card className="mx-2">
         <CardHeader>
-          <CardTitle>Ready to test your knowledge?</CardTitle>
+          <CardTitle>Choose Your Quiz Topics</CardTitle>
         </CardHeader>
         <CardContent>
           <p className="text-muted-foreground">
-            This quiz contains 10 questions specific to your industry and
-            skills. Take your time and choose the best answer for each question.
+            Select predefined topics, add custom topics
           </p>
+          <MultiSelect
+            options={predefinedTopics}
+            value={selectedTopics}
+            onChange={setSelectedTopics}
+            labelledBy="Select Topics"
+          />
+         
+          <input
+            type="text"
+            placeholder="Add custom topics (comma separated)"
+            value={customTopics}
+            onChange={(e) => setCustomTopics(e.target.value)}
+            className="mt-4 w-full p-2 border rounded"
+          />
         </CardContent>
         <CardFooter>
-          <Button onClick={generateQuizFn} className="w-full">
+          <Button onClick={startNewQuiz} className="w-full">
             Start Quiz
           </Button>
         </CardFooter>
@@ -141,35 +219,10 @@ export default function Quiz() {
             </div>
           ))}
         </RadioGroup>
-
-        {showExplanation && (
-          <div className="mt-4 p-4 bg-muted rounded-lg">
-            <p className="font-medium">Explanation:</p>
-            <p className="text-muted-foreground">{question.explanation}</p>
-          </div>
-        )}
       </CardContent>
       <CardFooter className="flex justify-between">
-        {!showExplanation && (
-          <Button
-            onClick={() => setShowExplanation(true)}
-            variant="outline"
-            disabled={!answers[currentQuestion]}
-          >
-            Show Explanation
-          </Button>
-        )}
-        <Button
-          onClick={handleNext}
-          disabled={!answers[currentQuestion] || savingResult}
-          className="ml-auto"
-        >
-          {savingResult && (
-            <BarLoader className="mt-4" width={"100%"} color="gray" />
-          )}
-          {currentQuestion < quizData.length - 1
-            ? "Next Question"
-            : "Finish Quiz"}
+        <Button onClick={handleNext} className="ml-auto">
+          {currentQuestion < quizData.length - 1 ? "Next" : "Finish"}
         </Button>
       </CardFooter>
     </Card>
