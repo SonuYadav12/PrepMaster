@@ -16,7 +16,7 @@ import { generateQuiz, saveQuizResult } from "@/actions/interview";
 import QuizResult from "./quiz-result";
 import useFetch from "@/hooks/use-fetch";
 import { BarLoader } from "react-spinners";
-import Select from "react-select"; // ✅ Replacing MultiSelect
+import Select from "react-select"; 
 
 const predefinedTopics = [
   { label: "Data Structures", value: "Data Structures" },
