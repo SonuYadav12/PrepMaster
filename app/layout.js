@@ -32,9 +32,18 @@ export default function RootLayout({ children }) {
             <main className="min-h-screen">{children}</main>
             <Toaster richColors />
 
-            <footer className="dark:bg-muted/50 py-12">
-              <div className="container mx-auto px-4 text-center text-black dark:text-gray-200">
-                <p>Made with ❤️ by Sonu Yadav</p>
+            <footer className="dark:bg-muted/50 py-12 border-t border-gray-300 dark:border-gray-700">
+              <div className="container mx-auto px-6 flex flex-col items-center justify-center text-center space-y-3">
+                <p className="text-lg font-semibold text-gray-800 dark:text-gray-300">
+                  Made with{" "}
+                  <span className="text-red-500 animate-pulse">❤️</span> by
+                  <span className="ml-1 font-bold text-blue-600 dark:text-blue-400">
+                    Sonu Yadav
+                  </span>
+                </p>
+                <p className="text-sm text-gray-600 dark:text-gray-400">
+                  © {new Date().getFullYear()} PrepMaster. All rights reserved.
+                </p>
               </div>
             </footer>
           </ThemeProvider>
