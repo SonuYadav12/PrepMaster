@@ -16,7 +16,7 @@ import { generateQuiz, saveQuizResult } from "@/actions/interview";
 import QuizResult from "./quiz-result";
 import useFetch from "@/hooks/use-fetch";
 import { BarLoader } from "react-spinners";
-import { MultiSelect } from "react-multi-select-component";
+import Select from "react-select"; // ✅ Replacing MultiSelect
 
 const predefinedTopics = [
   { label: "Data Structures", value: "Data Structures" },
@@ -144,11 +144,12 @@ export default function Quiz() {
               <p className="text-muted-foreground">
                 Select weak topics from your last quiz to practice.
               </p>
-              <MultiSelect
+              {/* ✅ Replacing MultiSelect with react-select */}
+              <Select
                 options={weakTopics.map(topic => ({ label: topic, value: topic }))}
                 value={selectedWeakTopics}
                 onChange={setSelectedWeakTopics}
-                labelledBy="Select Weak Topics"
+                isMulti
               />
             </CardContent>
             <CardFooter>
@@ -172,13 +173,13 @@ export default function Quiz() {
           <p className="text-muted-foreground">
             Select predefined topics, add custom topics
           </p>
-          <MultiSelect
+          {/* ✅ Replacing MultiSelect with react-select */}
+          <Select
             options={predefinedTopics}
             value={selectedTopics}
             onChange={setSelectedTopics}
-            labelledBy="Select Topics"
+            isMulti
           />
-         
           <input
             type="text"
             placeholder="Add custom topics (comma separated)"
